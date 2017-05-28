@@ -12,3 +12,7 @@ options:
 - play   - play (doesn't work, use toggle)
 - pause  - pause
 - toggle - toggle play/pause
+- player - use the live miniplayer
+
+flags:
+- -a     - display the album name
