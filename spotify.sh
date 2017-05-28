@@ -4,8 +4,6 @@
 #    -Add messages when toggling play/pause/shuffle
 #    -Fix 'play' command
 #    -Add support for song name picking
-#    -Fix player -- if song name + artist is wider than window, it will glitch the output
-#        -use tput cols to get number of columns for checking
 
 # Checking if running on a mac (stopping if not)
 if [ $( uname ) != "Darwin" ]; then
