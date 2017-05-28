@@ -4,6 +4,9 @@
 #    -Add messages when toggling play/pause/shuffle
 #    -Fix 'play' command
 #    -Add support for song name picking
+#    -Add proper flag support:
+#     -Progress bar
+#     -Now playing with next/previous
 
 # Checking if running on a mac (stopping if not)
 if [ $( uname ) != "Darwin" ]; then
@@ -193,9 +196,10 @@ if [ "$err" != "" ]; then
     exit
 fi
 
-if [ $1 == "next" ] || [ $1 == "prev" ]; then
-    nowPlaying
-fi
+# Functionality temporarily removed until permanent option is available through a flag
+#if [ $1 == "next" ] || [ $1 == "prev" ]; then
+#    nowPlaying
+#fi
 
 echo -en "${NONE}${REGULAR}"
 exit
