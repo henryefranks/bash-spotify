@@ -39,9 +39,11 @@ if [ "$#" -eq 1 ]; then
     validNum=1
 else
     validNum=0
-    if [ $2 == "-a" ]; then # A somewhat temporary solution, will fix to allow for other options later
-      validNum=1
-      album='return name of current track & " | " & artist of current track  & " | " & album of current track'
+    if [ "$#" -gt 1 ]; then # The below would throw an error if there were no arguments given
+      if [ $2 == "-a" ]; then # A somewhat temporary solution, will fix to allow for other options later
+        validNum=1
+        album='return name of current track & " | " & artist of current track  & " | " & album of current track'
+      fi
     fi
 fi
 
