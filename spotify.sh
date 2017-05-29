@@ -40,7 +40,7 @@ function cleanup {
   echo -en "${NONE}${REGULAR}"
   tput cnorm
   clear
-  exit 1
+  exit
 }
 
 # Checking is the album flag is active without allowing other flags
