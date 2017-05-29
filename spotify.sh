@@ -8,6 +8,9 @@
 #     -Progress bar
 #     -Now playing with next/previous
 
+# Running cleanup on ctrl-c (exit)
+trap cleanup INT
+
 # Checking if running on a mac (stopping if not)
 if [ $( uname ) != "Darwin" ]; then
     echo "Sorry, this only works on macOS"
@@ -31,6 +34,14 @@ NONE='\033[0m'
 BOLD=$( tput bold )
 ULINE=$( tput smul )
 REGULAR=$( tput sgr0 )
+
+function cleanup {
+  # General cleanup (fixing cursor style and output colour)
+  echo -en "${NONE}${REGULAR}"
+  tput cnorm
+  clear
+  exit 1
+}
 
 # Checking is the album flag is active without allowing other flags
 # Also, setting the return of the AppleScript appropriately
