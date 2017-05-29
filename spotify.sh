@@ -5,16 +5,21 @@
 #		-Fix 'play' command
 #		-Add support for song name picking
 #		-Add proper flag support:
-#		 -Progress bar
-#		 -Now playing with next/previous
+#			-Progress bar
+#			-Now playing with next/previous
 
-# Running cleanup on ctrl-c (exit)
-trap cleanup INT
+stty -echo
+
+function interrupt {
+	clear
+	tput cnorm # Only needs to be run in player mode
+	clean_exit
+}
 
 # Checking if running on a mac (stopping if not)
 if [ $( uname ) != "Darwin" ]; then
 	echo "Sorry, this only works on macOS"
-	exit 1
+	clean_exit
 fi
 
 version="0.1.4"
@@ -35,11 +40,11 @@ BOLD=$( tput bold )
 ULINE=$( tput smul )
 REGULAR=$( tput sgr0 )
 
-function cleanup {
+function clean_exit {
 	# General cleanup (fixing cursor style and output colour)
+	# This function is run instead of just exiting in most cases to keep the output from inheriting styles from echo statements, as a safety measure
 	echo -en "${NONE}${REGULAR}"
-	tput cnorm
-	clear
+	stty echo
 	exit
 }
 
@@ -71,17 +76,21 @@ if [ "$1" == "help" ] || [ "$validNum" -ne 1 ]; then  # Most important case
 	echo "         toggle - toggle play/pause"
 	echo "         player - live player"
 	echo "use -a flag to show album (off by default)"
-	exit
+	clean_exit
 elif [ "$1" == "info" ]; then
 	echo -e "${GREEN}Spotify for Bash v$version${NONE}"
 	echo -e "${BOLD}© $year Henry Franks${REGULAR}"
 	echo -e "Visit me on GitHub: ${ULINE}https://github.com/henryefranks${NONE}"
 	echo "use 'help' for a list of commands"
-	exit
+	clean_exit
 fi
 
 # Player mode
 if [ $1 = "player" ]; then
+
+	# Adding trap for clean exit (ctrl-c)
+	trap interrupt INT
+
 	resize -s 6 70 2>&1 > /dev/null
 	tput civis
 	clear
@@ -110,7 +119,7 @@ fi
 
 echo -en ${BOLD}
 
-function showBar {
+function show_bar {
 	# Printing the times and the progress bar
 	echo -en "${NONE}"
 	echo -n "$currentMin:"
@@ -137,7 +146,7 @@ function showBar {
 	echo "$endSec"
 }
 
-function nowPlaying {
+function now_playing {
 	# Current time and duration of track
 	currentPos=$( osascript -e 'tell application "Spotify"' -e "return player position" -e "end tell" )
 	duration=$( osascript -e 'tell application "Spotify"' -e "return duration of current track" -e "end tell" )
@@ -174,10 +183,10 @@ function nowPlaying {
 	if [ "$state" == "playing" ]; then
 		echo -n "||"
 	else
-		echo -en "\xE2\x96\xB6"
+		echo -en "\xE2\x96\xB6 "
 	fi
 	echo -n ")  "
-	showBar
+	show_bar
 	echo -en ${NONE}
 }
 
@@ -186,9 +195,8 @@ command="$1"
 # Parsing the command
 # TODO: Convert to switch statement
 if [ $command == "track" ]; then
-	nowPlaying
-	echo -e "${NONE}${REGULAR}"
-	exit
+	now_playing
+	clean_exit
 elif [ $command == "play" ]; then
 	command='play track $2'
 elif [ $command == "next" ]; then
@@ -212,9 +220,7 @@ fi
 
 # Functionality temporarily removed until permanent option is available through a flag
 #if [ $1 == "next" ] || [ $1 == "prev" ]; then
-#	nowPlaying
+#	now_playing
 #fi
 
-echo -en "${NONE}${REGULAR}"
-tput cnorm
-exit
+clean_exit
