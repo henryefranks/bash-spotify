@@ -215,7 +215,7 @@ err=$( osascript -e 'tell application "Spotify"' -e "$command" -e "end tell" 2>&
 # $err will be empty if there was no error
 if [ "$err" != "" ]; then
 	echo -e "${REGULAR}invalid command - use 'help' for a list of commands"
-	exit
+	clean_exit
 fi
 
 # Functionality temporarily removed until permanent option is available through a flag
