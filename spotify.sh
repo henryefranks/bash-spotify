@@ -5,10 +5,27 @@
 #		-Fix 'play' command
 #		-Add support for song name picking
 #		-Add proper flag support:
+#			-Use getopts
 #			-Progress bar
 #			-Now playing with next/previous
 
 stty -echo
+
+# Some values to change text styling
+# TODO: NONE and REGULAR could be combined?
+GREEN='\033[1;32m'
+NONE='\033[0m'
+BOLD=$( tput bold )
+ULINE=$( tput smul )
+REGULAR=$( tput sgr0 )
+
+function clean_exit {
+	# General cleanup (fixing cursor style and output colour)
+	# This function is run instead of just exiting in most cases to keep the output from inheriting styles from echo statements, as a safety measure
+	echo -en "${NONE}${REGULAR}"
+	stty echo
+	exit
+}
 
 function interrupt {
 	clear
@@ -32,21 +49,9 @@ if ! pgrep -xq -- "Spotify"; then
 	sleep 1
 fi
 
-# Some values to change text styling
-# TODO: NONE and REGULAR could be combined?
-GREEN='\033[1;32m'
-NONE='\033[0m'
-BOLD=$( tput bold )
-ULINE=$( tput smul )
-REGULAR=$( tput sgr0 )
-
-function clean_exit {
-	# General cleanup (fixing cursor style and output colour)
-	# This function is run instead of just exiting in most cases to keep the output from inheriting styles from echo statements, as a safety measure
-	echo -en "${NONE}${REGULAR}"
-	stty echo
-	exit
-}
+if [ "$#" -eq 0 ]; then
+	clean_exit
+fi
 
 # Checking is the album flag is active without allowing other flags
 # Also, setting the return of the AppleScript appropriately
@@ -62,6 +67,28 @@ else
 		fi
 	fi
 fi
+
+#-------------------Testing new functionality-------------------#
+
+while test $# -gt 1; do
+	case "$2" in
+		-q)
+			echo "q -- testing"
+			shift
+			;;
+		-t)
+			echo "t -- testing"
+			shift
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
+validNum=1
+
+#---------------------------------------------------------------#
 
 # Checking for non-player cases first will save time
 if [ "$1" == "help" ] || [ "$validNum" -ne 1 ]; then  # Most important case
@@ -87,32 +114,41 @@ fi
 
 # Player mode
 if [ $1 = "player" ]; then
-
 	# Adding trap for clean exit (ctrl-c)
 	trap interrupt INT
 
-	resize -s 6 70 2>&1 > /dev/null
+	printf '\e[8;6;70t'
+	# Alternatively (requires X11): resize -s 6 70 2>&1 > /dev/null
 	tput civis
 	clear
 
 	oldLen=0
+	oldOut=""
 	len=0
 
 	command="$0 track" # Calling itself because I'm lazy
 	if [ "$#" -eq 2 ]; then # Support for album flag
-		command="$0 track -a"
+		command="$0 track $2"
 	fi
 	while :
 	do
 		oldLen=$len
 		tput cup -0
+		oldOut=$output
 		output=$(eval $command)
+		willEcho=false
+		if [ "$output" != "$oldOut" ]; then
+			willEcho=true
+		fi
 		len=$(echo -n $output | wc -m)
 		if [ "$oldLen" != "$len" ]; then
 			# Clearing output if not properly overwritten to avoid graphical glitches
 			clear
+			willEcho=true
 		fi
-		echo "$output"
+		if [ willEcho ]; then
+			echo "$output"
+		fi
 		sleep 0.1 # Using a 10Hz refresh rate to keep the second intervals regular
 	done
 fi
