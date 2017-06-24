@@ -40,6 +40,7 @@ if [ $( uname ) != "Darwin" ]; then
 fi
 
 if [ "$1" == "quit" ]; then
+	echo "Quitting Spotify"
 	osascript -e 'quit app "Spotify"'
 	clean_exit
 fi
