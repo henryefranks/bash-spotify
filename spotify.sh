@@ -39,6 +39,11 @@ if [ $( uname ) != "Darwin" ]; then
 	clean_exit
 fi
 
+if [ "$1" == "quit" ]; then
+	osascript -e 'quit app "Spotify"'
+	clean_exit
+fi
+
 version="0.1.4"
 year="2017"
 
@@ -95,6 +100,7 @@ if [ "$1" == "help" ] || [ "$validNum" -ne 1 ]; then  # Most important case
 	echo "usage: ./spotify.sh [options] [-a]"
 	echo "options: info   - more info"
 	echo "         help   - help (this screen)"
+	echo "         quit   - quit Spotify"
 	echo "         track  - info about the currently playing track"
 	echo "         next   - next song"
 	echo "         prev   - previous song"
