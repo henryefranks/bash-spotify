@@ -1,18 +1,17 @@
 #!/bin/bash
 
 # TODO:
-#		-Add messages when toggling play/pause/shuffle
-#		-Fix 'play' command
 #		-Add support for song name picking
 #		-Add proper flag support:
 #			-Use getopts
-#			-Progress bar
-#			-Now playing with next/previous
+#			-Flags for:
+#				-Progress bar
+#				-Now playing with next/previous
 
 stty -echo
 
 # Some values to change text styling
-# TODO: NONE and REGULAR could be combined?
+# TODO: Could NONE and REGULAR be combined?
 GREEN='\033[1;32m'
 NONE='\033[0m'
 BOLD=$( tput bold )
@@ -21,7 +20,7 @@ REGULAR=$( tput sgr0 )
 
 function clean_exit {
 	# General cleanup (fixing cursor style and output colour)
-	# This function is run instead of just exiting in most cases to keep the output from inheriting styles from echo statements, as a safety measure
+	# This function is run instead of just exiting in most cases to keep the output from inheriting styles from echo statements, as a precaution
 	echo -en "${NONE}${REGULAR}"
 	stty echo
 	exit
@@ -105,7 +104,7 @@ if [ "$1" == "help" ] || [ "$validNum" -ne 1 ]; then  # Most important case
 	echo "         track  - info about the currently playing track"
 	echo "         next   - next song"
 	echo "         prev   - previous song"
-	echo "         play   - play (doesn't work, use toggle)"
+	echo "         play   - play"
 	echo "         pause  - pause"
 	echo "         toggle - toggle play/pause"
 	echo "         player - live player"
@@ -221,7 +220,7 @@ function now_playing {
 	echo ${track:0:$(tput cols)}
 	state=$( osascript -e 'tell application "Spotify"' -e 'return player state' -e 'end tell' )
 	echo
-	# Note: I've reversed the play and pause logos so they are the way they appear in most players (pause logo = playing, play logo = paused)
+	# Note: I've reversed the play and pause icons so they are the way they appear in most players (pause icon = playing, play icon = paused)
 	echo -n "("
 	if [ "$state" == "playing" ]; then
 		echo -n "||"
@@ -241,16 +240,47 @@ if [ $command == "track" ]; then
 	now_playing
 	clean_exit
 elif [ $command == "play" ]; then
-	command='play track $2'
+  # Replace with resume in future to support playing songs by name
+  state=$( osascript -e 'tell application "Spotify"' -e 'return player state' -e 'end tell' )
+	echo -en ${REGULAR}
+	if [ "$state" != "playing" ]; then
+		command="playpause"
+		echo "Playing"
+  else
+		echo "Already playing"
+		clean_exit
+  fi
+	echo -en ${BOLD}
 elif [ $command == "next" ]; then
 	command="next track"
 elif [ $command == "prev" ]; then
 	command="previous track"
 elif [ $command == "toggle" ]; then
-	command="playpause"
+	command="play"
 elif [ $command == "shuffle" ]; then
 	command="set shuffling to not shuffling"
+  shuffle=$( osascript -e 'tell application "Spotify"' -e 'return shuffling' -e 'end tell' )
+	echo -en ${REGULAR}
+	if [ "$shuffle" == "true" ]; then
+		echo "Turning off shuffle"
+  else
+		echo "Turning on shuffle"
+  fi
+	echo -en ${BOLD}
+elif [ $command == "pause" ]; then
+	state=$( osascript -e 'tell application "Spotify"' -e 'return player state' -e 'end tell' )
+	echo -en ${REGULAR}
+	if [ "$state" == "playing" ]; then
+		echo "Pausing"
+  else
+		echo "Already paused"
+		clean_exit
+  fi
+	echo -en ${BOLD}
 fi
+
+# For playing tracks by name, use:
+# command='play track $2'
 
 # Redirecting stderr into a variable to check if command was valid
 err=$( osascript -e 'tell application "Spotify"' -e "$command" -e "end tell" 2>&1 > /dev/null )
