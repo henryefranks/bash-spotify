@@ -56,45 +56,23 @@ if [ "$#" -eq 0 ]; then
 	clean_exit
 fi
 
-# Checking is the album flag is active without allowing other flags
-# Also, setting the return of the AppleScript appropriately
-album='return name of current track & " | " & artist of current track'
-if [ "$#" -eq 1 ]; then
-	validNum=1
-else
-	validNum=0
-	if [ "$#" -gt 1 ]; then # The below would throw an error if there were no arguments given
-		if [ $2 == "-a" ]; then # A somewhat temporary solution, will fix to allow for other options later
-			validNum=1
-			album='return name of current track & " | " & artist of current track  & " | " & album of current track'
-		fi
-	fi
-fi
-
-#-------------------Testing new functionality-------------------#
-
 # getopts only works with $1, so I copy the command to a variable and shift
 command="$1"
 shift
 
-while getopts 'qt' flag; do
+album='return name of current track & " | " & artist of current track'
+while getopts 'a' flag; do
   case "${flag}" in
-    q)
-			echo "q -- testing"
-			validNum=1
+    a)
+			# Adding album to player echo if flag is active
+			album='return name of current track & " | " & artist of current track  & " | " & album of current track'
 			;;
-    t)
-			echo "t -- testing"
-			validNum=1
-			;;
-    *) echo "Unexpected option ${flag}" ;;
+    *) echo "illegal option -- ${flag}" ;;
   esac
 done
 
-#---------------------------------------------------------------#
-
 # Checking for non-player cases first will save time
-if [ "$command" == "help" ] || [ "$validNum" -ne 1 ]; then  # Most important case
+if [ "$command" == "help" ] || [ "$#" -gt 1 ]; then  # Most important case
 	echo "usage: $0 [options] [-a]"
 	echo "options: info   - more info"
 	echo "         help   - help (this screen)"
