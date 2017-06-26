@@ -14,9 +14,9 @@ stty -echo
 # TODO: Could NONE and REGULAR be combined?
 GREEN='\033[1;32m'
 NONE='\033[0m'
-BOLD=$( tput bold )
-ULINE=$( tput smul )
-REGULAR=$( tput sgr0 )
+BOLD=$(tput bold)
+ULINE=$(tput smul)
+REGULAR=$(tput sgr0)
 
 function clean_exit {
 	# General cleanup (fixing cursor style and output colour)
@@ -33,7 +33,7 @@ function interrupt {
 }
 
 # Checking if running on a mac (stopping if not)
-if [ $( uname ) != "Darwin" ]; then
+if [ $(uname) != "Darwin" ]; then
 	echo "Sorry, this only works on macOS"
 	clean_exit
 fi
@@ -165,7 +165,7 @@ function show_bar {
 	# Printing the times and the progress bar
 	echo -en "${NONE}"
 	echo -n "$currentMin:"
-	if (( $currentSec < 10 )); then
+	if (($currentSec < 10)); then
 		echo -n "0"
 	fi
 	if [ "$currentSec" == "-0" ]; then # Fixing a bug where it would display, for example 1:0-0 (currentSec was set to -0)
@@ -174,7 +174,7 @@ function show_bar {
 	echo -n "$currentSec"
 	echo -en " [${GREEN}"
 	for i in {0..20}; do
-		if (( i > lineLength )); then
+		if ((i > lineLength)); then
 			echo -en "${NONE}${BOLD}-${REGULAR}"
 		else
 			echo -en "${GREEN}${BOLD}=${REGULAR}"
@@ -182,7 +182,7 @@ function show_bar {
 	done
 	echo -en "${NONE}] "
 	echo -n "$endMin:"
-	if (( $endSec < 10 )); then
+	if (($endSec < 10)); then
 		echo -n "0"
 	fi
 	echo "$endSec"
@@ -190,22 +190,22 @@ function show_bar {
 
 function now_playing {
 	# Current time and duration of track
-	currentPos=$( osascript -e 'tell application "Spotify"' -e "return player position" -e "end tell" )
-	duration=$( osascript -e 'tell application "Spotify"' -e "return duration of current track" -e "end tell" )
+	currentPos=$(osascript -e 'tell application "Spotify"' -e "return player position" -e "end tell")
+	duration=$(osascript -e 'tell application "Spotify"' -e "return duration of current track" -e "end tell")
 
 
 	# Some maths to work out the values to show on the progress bar
-	truncPos=$( printf "%.*f" 0 $currentPos )
-	truncDur=$( printf "%.*f" 0 $(( $duration / 1000)) )
-	ratio=$( echo "$truncPos / $truncDur" | bc -l )
-	tempLength=$( echo "20 * $ratio" | bc -l )
-	lineLength=$( printf "%.*f" 0 $tempLength )
+	truncPos=$(printf "%.*f" 0 $currentPos)
+	truncDur=$(printf "%.*f" 0 $(($duration / 1000)))
+	ratio=$(echo "$truncPos / $truncDur" | bc -l)
+	tempLength=$(echo "20 * $ratio" | bc -l)
+	lineLength=$(printf "%.*f" 0 $tempLength)
 
-	currentMin=$(( truncPos / 60 ))
-	currentSec=$( printf "%.*f" 0 $( echo "$currentPos - $(( currentMin * 60 ))" | bc -l ) )
+	currentMin=$((truncPos / 60))
+	currentSec=$(printf "%.*f" 0 $( echo "$currentPos - $(( currentMin * 60 ))" | bc -l))
 
-	endMin=$(( truncDur / 60 ))
-	endSec=$( printf "%.*f" 0 $( echo "$truncDur - $(( endMin * 60 ))" | bc -l ) )
+	endMin=$((truncDur / 60))
+	endSec=$(printf "%.*f" 0 $( echo "$truncDur - $(( endMin * 60 ))" | bc -l))
 	echo "Now Playing:"
 	echo -en ${GREEN}
 
@@ -218,7 +218,7 @@ function now_playing {
 		clear
 	fi
 	echo ${track:0:$(tput cols)}
-	state=$( osascript -e 'tell application "Spotify"' -e 'return player state' -e 'end tell' )
+	state=$(osascript -e 'tell application "Spotify"' -e 'return player state' -e 'end tell')
 	echo
 	# Note: I've reversed the play and pause icons so they are the way they appear in most players (pause icon = playing, play icon = paused)
 	echo -n "("
@@ -241,7 +241,7 @@ if [ $command == "track" ]; then
 	clean_exit
 elif [ $command == "play" ]; then
   # Replace with resume in future to support playing songs by name
-  state=$( osascript -e 'tell application "Spotify"' -e 'return player state' -e 'end tell' )
+  state=$(osascript -e 'tell application "Spotify"' -e 'return player state' -e 'end tell')
 	echo -en ${REGULAR}
 	if [ "$state" != "playing" ]; then
 		command="playpause"
@@ -259,7 +259,7 @@ elif [ $command == "toggle" ]; then
 	command="play"
 elif [ $command == "shuffle" ]; then
 	command="set shuffling to not shuffling"
-  shuffle=$( osascript -e 'tell application "Spotify"' -e 'return shuffling' -e 'end tell' )
+  shuffle=$(osascript -e 'tell application "Spotify"' -e 'return shuffling' -e 'end tell')
 	echo -en ${REGULAR}
 	if [ "$shuffle" == "true" ]; then
 		echo "Turning off shuffle"
@@ -268,7 +268,7 @@ elif [ $command == "shuffle" ]; then
   fi
 	echo -en ${BOLD}
 elif [ $command == "pause" ]; then
-	state=$( osascript -e 'tell application "Spotify"' -e 'return player state' -e 'end tell' )
+	state=$(osascript -e 'tell application "Spotify"' -e 'return player state' -e 'end tell')
 	echo -en ${REGULAR}
 	if [ "$state" == "playing" ]; then
 		echo "Pausing"
@@ -283,7 +283,7 @@ fi
 # command='play track $2'
 
 # Redirecting stderr into a variable to check if command was valid
-err=$( osascript -e 'tell application "Spotify"' -e "$command" -e "end tell" 2>&1 > /dev/null )
+err=$(osascript -e 'tell application "Spotify"' -e "$command" -e "end tell" 2>&1 > /dev/null)
 
 # $err will be empty if there was no error
 if [ "$err" != "" ]; then
