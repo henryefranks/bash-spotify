@@ -2,9 +2,6 @@
 
 # TODO:
 #		-Add support for song name picking
-#		-Add flags:
-#		        -Progress bar
-#						-Now playing with next/previous
 
 stty -echo
 
@@ -61,11 +58,22 @@ command="$1"
 shift
 
 album='return name of current track & " | " & artist of current track'
-while getopts 'a' flag; do
+player=false
+progress=false
+
+while getopts 'anp' flag; do
   case "${flag}" in
     a)
 			# Adding album to player echo if flag is active
 			album='return name of current track & " | " & artist of current track  & " | " & album of current track'
+			;;
+		n)
+			# Showing the player with next and previous commands
+			player=true
+			;;
+		p)
+			# Showing the progress bar with now playing
+			progress=true
 			;;
     *) echo "illegal option -- ${flag}" ;;
   esac
@@ -73,18 +81,20 @@ done
 
 # Checking for non-player cases first will save time
 if [ "$command" == "help" ] || [ "$#" -gt 1 ]; then  # Most important case
-	echo "usage: $0 [options] [-a]"
-	echo "options: info   - more info"
-	echo "         help   - help (this screen)"
-	echo "         quit   - quit Spotify"
-	echo "         track  - info about the currently playing track"
-	echo "         next   - next song"
-	echo "         prev   - previous song"
-	echo "         play   - play"
-	echo "         pause  - pause"
-	echo "         toggle - toggle play/pause"
-	echo "         player - live player"
-	echo "use -a flag to show album (off by default)"
+	echo "usage: $0 [options] [-anp]"
+	echo "commands: info   - more info"
+	echo "          help   - help (this screen)"
+	echo "          quit   - quit Spotify"
+	echo "          track  - info about the currently playing track"
+	echo "          next   - next song"
+	echo "          prev   - previous song"
+	echo "          play   - play"
+	echo "          pause  - pause"
+	echo "          toggle - toggle play/pause"
+	echo "          player - live player"
+	echo "options:  a			 - show album"
+	echo "				  n			 - show now playing (with next of previous commands)"
+	echo "				  p			 - show progress bar with now playing"
 	clean_exit
 elif [ "$command" == "info" ]; then
 	echo -e "${GREEN}Spotify for Bash v$version${NONE}"
@@ -194,18 +204,20 @@ function now_playing {
 		clear
 	fi
 	echo ${track:0:$(tput cols)}
-	state=$(osascript -e 'tell application "Spotify"' -e 'return player state' -e 'end tell')
-	echo
-	# Note: I've reversed the play and pause icons so they are the way they appear in most players (pause icon = playing, play icon = paused)
-	echo -n "("
-	if [ "$state" == "playing" ]; then
-		echo -n "||"
-	else
-		echo -en "\xE2\x96\xB6 "
+	if [ "$progress" = true ]; then
+		state=$(osascript -e 'tell application "Spotify"' -e 'return player state' -e 'end tell')
+		echo
+		# Note: I've reversed the play and pause icons so they are the way they appear in most players (pause icon = playing, play icon = paused)
+		echo -n "("
+		if [ "$state" == "playing" ]; then
+			echo -n "||"
+		else
+			echo -en "\xE2\x96\xB6 "
+		fi
+		echo -n ")  "
+		show_bar
+		echo -en ${NONE}
 	fi
-	echo -n ")  "
-	show_bar
-	echo -en ${NONE}
 }
 
 # Parsing the command
@@ -266,8 +278,8 @@ if [ "$err" != "" ]; then
 fi
 
 # Functionality temporarily removed until permanent option is available through a flag
-#if [ $1 == "next" ] || [ $1 == "prev" ]; then
-#	now_playing
-#fi
+if ([ "$command" == "next track" ] || [ "$command" == "previous track" ]) && [ "$player" == true ]; then
+	now_playing
+fi
 
 clean_exit
