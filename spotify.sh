@@ -198,10 +198,11 @@ function now_playing {
 
 	track=$(osascript -e 'tell application "Spotify"' -e "$album" -e "end tell")
 	if [ $(tput cols) -lt 45 ]; then
-		resize -s $(tput lines) 45 2>&1 > /dev/null
+		# FIXME: Sometimes this doesn't resize properly
+		printf '\e[8;'"$(tput lines)"';45t'
 	fi
-	if [ $(tput lines) -lt 6 ]; then
-		resize -s 6 $(tput cols) 2>&1 > /dev/null
+	if [ $(tput lines) -ne 6 ]; then
+		printf '\e[8;6;'"$(tput cols)"'t'
 		clear
 	fi
 	echo ${track:0:$(tput cols)}
