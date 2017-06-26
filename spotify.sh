@@ -61,11 +61,14 @@ album='return name of current track & " | " & artist of current track'
 player=false
 progress=false
 
+playerOptions="-p"
+
 while getopts 'anp' flag; do
   case "${flag}" in
     a)
 			# Adding album to player echo if flag is active
 			album='return name of current track & " | " & artist of current track  & " | " & album of current track'
+			playerOptions="${playerOptions}a"
 			;;
 		n)
 			# Showing the player with next and previous commands
@@ -118,10 +121,7 @@ if [ $command = "player" ]; then
 	oldOut=""
 	len=0
 
-	command="$0 track" # Calling itself because I'm lazy
-	if [ "$#" -eq 2 ]; then # Support for album flag
-		command="$0 track $2"
-	fi
+	command="$0 track $playerOptions" # Calling itself because I'm lazy
 	while :
 	do
 		oldLen=$len
