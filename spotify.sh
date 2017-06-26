@@ -2,11 +2,9 @@
 
 # TODO:
 #		-Add support for song name picking
-#		-Add proper flag support:
-#			-Use getopts
-#			-Flags for:
-#				-Progress bar
-#				-Now playing with next/previous
+#		-Add flags:
+#		        -Progress bar
+#						-Now playing with next/previous
 
 stty -echo
 
@@ -75,29 +73,29 @@ fi
 
 #-------------------Testing new functionality-------------------#
 
-while test $# -gt 1; do
-	case "$2" in
-		-q)
-			echo "q -- testing"
-			shift
-			;;
-		-t)
-			echo "t -- testing"
-			shift
-			;;
-		*)
-			break
-			;;
-	esac
-done
+# getopts only works with $1, so I copy the command to a variable and shift
+command="$1"
+shift
 
-validNum=1
+while getopts 'qt' flag; do
+  case "${flag}" in
+    q)
+			echo "q -- testing"
+			validNum=1
+			;;
+    t)
+			echo "t -- testing"
+			validNum=1
+			;;
+    *) echo "Unexpected option ${flag}" ;;
+  esac
+done
 
 #---------------------------------------------------------------#
 
 # Checking for non-player cases first will save time
-if [ "$1" == "help" ] || [ "$validNum" -ne 1 ]; then  # Most important case
-	echo "usage: ./spotify.sh [options] [-a]"
+if [ "$command" == "help" ] || [ "$validNum" -ne 1 ]; then  # Most important case
+	echo "usage: $0 [options] [-a]"
 	echo "options: info   - more info"
 	echo "         help   - help (this screen)"
 	echo "         quit   - quit Spotify"
@@ -110,7 +108,7 @@ if [ "$1" == "help" ] || [ "$validNum" -ne 1 ]; then  # Most important case
 	echo "         player - live player"
 	echo "use -a flag to show album (off by default)"
 	clean_exit
-elif [ "$1" == "info" ]; then
+elif [ "$command" == "info" ]; then
 	echo -e "${GREEN}Spotify for Bash v$version${NONE}"
 	echo -e "${BOLD}© $year Henry Franks${REGULAR}"
 	echo -e "Visit me on GitHub: ${ULINE}https://github.com/henryefranks${NONE}"
@@ -119,7 +117,7 @@ elif [ "$1" == "info" ]; then
 fi
 
 # Player mode
-if [ $1 = "player" ]; then
+if [ $command = "player" ]; then
 	# Adding trap for clean exit (ctrl-c)
 	trap interrupt INT
 
@@ -231,8 +229,6 @@ function now_playing {
 	show_bar
 	echo -en ${NONE}
 }
-
-command="$1"
 
 # Parsing the command
 # TODO: Convert to switch statement
