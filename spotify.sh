@@ -96,9 +96,9 @@ if [ "$command" == "help" ] || [ "$#" -gt 1 ]; then  # Most important case
 	echo "          toggle - toggle play/pause"
 	echo "          player - live player"
 	echo ""
-	echo "options:  a			 - show album"
-	echo "				  n			 - show now playing (with next and previous commands)"
-	echo "				  p			 - show progress bar with now playing"
+	echo "options:  a      - show album"
+	echo "          n      - show now playing (with next and previous commands)"
+	echo "          p      - show progress bar with now playing"
 	clean_exit
 elif [ "$command" == "info" ]; then
 	echo -e "${GREEN}Spotify for Bash v$version${NONE}"
