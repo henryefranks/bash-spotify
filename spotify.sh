@@ -96,8 +96,8 @@ if [ "$command" == "help" ] || [ "$#" -gt 1 ]; then  # Most important case
 	echo "          track  - info about the currently playing track"
 	echo "          next   - next song"
 	echo "          prev   - previous song"
-	echo "          play   - play"
-	echo "          pause  - pause"
+	echo "          resume - resume playback"
+	echo "          pause  - pause playback"
 	echo "          toggle - toggle play/pause"
 	echo "          player - live player"
 	echo ""
@@ -236,8 +236,7 @@ function now_playing {
 if [ $command == "track" ]; then
 	now_playing
 	clean_exit
-elif [ $command == "play" ]; then
-  # Replace with resume in future to support playing songs by name
+elif [ $command == "resume" ]; then
   state=$(osascript -e 'tell application "Spotify"' -e 'return player state' -e 'end tell')
 	echo -en ${REGULAR}
 	if [ "$state" != "playing" ]; then
@@ -253,7 +252,7 @@ elif [ $command == "next" ]; then
 elif [ $command == "prev" ]; then
 	command="previous track"
 elif [ $command == "toggle" ]; then
-	command="play"
+	command="playpause"
 elif [ $command == "shuffle" ]; then
 	command="set shuffling to not shuffling"
   shuffle=$(osascript -e 'tell application "Spotify"' -e 'return shuffling' -e 'end tell')
@@ -285,7 +284,6 @@ if [ "$err" != "" ]; then
 	clean_exit
 fi
 
-# Functionality temporarily removed until permanent option is available through a flag
 if [ "$player" == true ]; then
 	now_playing
 fi

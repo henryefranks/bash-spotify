@@ -10,8 +10,8 @@ commands:
 - track  - info about the currently playing track
 - next   - next song
 - prev   - previous song
-- play   - play
-- pause  - pause
+- resume - resume playback
+- pause  - pause playback
 - toggle - toggle play/pause
 - player - live player
 
