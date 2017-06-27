@@ -1,7 +1,7 @@
 # Bash-Spotify
 A Spotify client for the Bash command line
 
-usage: ./spotify.sh [-anp]
+usage: ./spotify.sh [-anpr]
 
 commands:
 - info   - more info
@@ -19,3 +19,4 @@ options:
 - a	- show album
 - n	- show now playing (with next and previous commands)
 - p	- show progress bar with now playing
+- r - resize the window for the player

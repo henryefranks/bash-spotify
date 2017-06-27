@@ -60,10 +60,11 @@ shift
 album='return name of current track & " | " & artist of current track'
 player=false
 progress=false
+resize=false
 
 playerOptions="-p"
 
-while getopts 'anp' flag; do
+while getopts 'anpr' flag; do
   case "${flag}" in
     a)
 			# Adding album to player echo if flag is active
@@ -78,13 +79,17 @@ while getopts 'anp' flag; do
 			# Showing the progress bar with now playing
 			progress=true
 			;;
+		r)
+			# Resizing the window in player mode
+			resize=true
+			;;
     *) echo "illegal option -- ${flag}" ;;
   esac
 done
 
 # Checking for non-player cases first will save time
 if [ "$command" == "help" ] || [ "$#" -gt 1 ]; then  # Most important case
-	echo "usage: $0 [options] [-anp]"
+	echo "usage: $0 [options] [-anpr]"
 	echo "commands: info   - more info"
 	echo "          help   - help (this screen)"
 	echo "          quit   - quit Spotify"
@@ -97,8 +102,9 @@ if [ "$command" == "help" ] || [ "$#" -gt 1 ]; then  # Most important case
 	echo "          player - live player"
 	echo ""
 	echo "options:  a      - show album"
-	echo "          n      - show now playing (with next and previous commands)"
+	echo "          n      - show now playing"
 	echo "          p      - show progress bar with now playing"
+	echo "          r      - resize the window for the player"
 	clean_exit
 elif [ "$command" == "info" ]; then
 	echo -e "${GREEN}Spotify for Bash v$version${NONE}"
@@ -113,8 +119,10 @@ if [ $command = "player" ]; then
 	# Adding trap for clean exit (ctrl-c)
 	trap interrupt INT
 
-	printf '\e[8;6;70t'
-	# Alternatively (requires X11): resize -s 6 70 2>&1 > /dev/null
+	if [ "$resize" == true ]; then
+		printf '\e[8;6;70t'
+		# Alternatively (requires X11): resize -s 6 70 2>&1 > /dev/null
+	fi
 	tput civis
 	clear
 
@@ -123,6 +131,7 @@ if [ $command = "player" ]; then
 	len=0
 
 	command="$0 track $playerOptions" # Calling itself because I'm lazy
+	# TODO: run separately to reduce battery consumption
 	while :
 	do
 		oldLen=$len
@@ -197,11 +206,11 @@ function now_playing {
 	echo -en ${GREEN}
 
 	track=$(osascript -e 'tell application "Spotify"' -e "$album" -e "end tell")
+	# FIXME: Sometimes these don't resize properly
 	if [ $(tput cols) -lt 45 ]; then
-		# FIXME: Sometimes this doesn't resize properly
 		printf '\e[8;'"$(tput lines)"';45t'
 	fi
-	if [ $(tput lines) -ne 6 ]; then
+	if [ $(tput lines) -lt 6 ]; then
 		printf '\e[8;6;'"$(tput cols)"'t'
 		clear
 	fi
@@ -267,9 +276,6 @@ elif [ $command == "pause" ]; then
 	echo -en ${BOLD}
 fi
 
-# For playing tracks by name, use:
-# command='play track $2'
-
 # Redirecting stderr into a variable to check if command was valid
 err=$(osascript -e 'tell application "Spotify"' -e "$command" -e "end tell" 2>&1 > /dev/null)
 
@@ -280,7 +286,7 @@ if [ "$err" != "" ]; then
 fi
 
 # Functionality temporarily removed until permanent option is available through a flag
-if ([ "$command" == "next track" ] || [ "$command" == "previous track" ]) && [ "$player" == true ]; then
+if [ "$player" == true ]; then
 	now_playing
 fi
 
