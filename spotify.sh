@@ -3,6 +3,14 @@
 # TODO:
 #		-Add support for song name picking
 
+# SONG NAME PICKING PSEUDO-CODE
+#
+# Command: spotify play [options] [type] [name]
+#	Get type and name into variables
+#	Search for type with name -> URI
+#		-> Requires authentication, possibly get OAuth from Spotify App
+#	Play with URI
+
 stty -echo
 
 # Some values to change text styling
@@ -44,7 +52,12 @@ year="2017"
 
 # Opening Spotify if it isn't open
 if ! pgrep -xq -- "Spotify"; then
-	open -a Spotify -jg
+	# Checking if Spotify is installed and opening it if it is
+	err=$(open -a Spotify -jg 2>&1 > /dev/null)
+	if [ "$err" != "" ]; then
+		echo "You must have Spotify installed to use this"
+		clean_exit
+	fi
 	# Adequate time for it to open in background
 	sleep 1
 fi
@@ -64,26 +77,33 @@ resize=false
 
 playerOptions="-p"
 
-while getopts 'anpr' flag; do
+while getopts 'anprc' flag; do
   case "${flag}" in
     a)
 			# Adding album to player echo if flag is active
 			album='return name of current track & " | " & artist of current track  & " | " & album of current track'
 			playerOptions="${playerOptions}a"
 			;;
-		n)
+    n)
 			# Showing the player with next and previous commands
 			player=true
 			;;
-		p)
+    p)
 			# Showing the progress bar with now playing
 			progress=true
 			;;
-		r)
+    r)
 			# Resizing the window in player mode
 			resize=true
 			;;
-    *) echo "illegal option -- ${flag}" ;;
+    c)
+			GREEN=$NONE
+			playerOptions="${playerOptions}c"
+			;;
+
+    *)
+			echo "illegal option -- ${flag}"
+			;;
   esac
 done
 
@@ -105,6 +125,7 @@ if [ "$command" == "help" ] || [ "$#" -gt 1 ]; then  # Most important case
 	echo "          n      - show now playing"
 	echo "          p      - show progress bar with now playing"
 	echo "          r      - resize the window for the player"
+	echo "          c      - display without colour"
 	clean_exit
 elif [ "$command" == "info" ]; then
 	echo -e "${GREEN}Spotify for Bash v$version${NONE}"
@@ -156,6 +177,13 @@ if [ $command = "player" ]; then
 fi
 
 echo -en ${BOLD}
+URI=""
+
+function search {
+	# $1 = name
+	# Doesn't work because needs OAuth token.
+	URI=$(curl -s -G https://api.spotify.com/v1/search --data-urlencode "q=$1" -d "type=song&limit=1&offset=0" -H "Accept: application/json" | grep -E -o "spotify:song:[a-zA-Z0-9]+" -m 1)
+}
 
 function show_bar {
 	# Printing the times and the progress bar
@@ -273,6 +301,9 @@ elif [ $command == "pause" ]; then
 		clean_exit
   fi
 	echo -en ${BOLD}
+elif [ $command == "play" ]; then
+	search $2
+	osascript -e 'tell application "Spotify"' -e 'play track "$URI"' -e 'end tell'
 fi
 
 # Redirecting stderr into a variable to check if command was valid

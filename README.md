@@ -20,3 +20,4 @@ options:
 - n	- show now playing (with next and previous commands)
 - p	- show progress bar with now playing
 - r - resize the window for the player
+- c - display without colour
