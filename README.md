@@ -1,6 +1,8 @@
 # Bash-Spotify
 A Spotify client for the Bash command line
 
+**WARNING: This script may have a moderate to large effect on battery life**
+
 usage: ./spotify.sh [-anpr]
 
 commands:
