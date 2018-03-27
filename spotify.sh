@@ -1,15 +1,9 @@
 #!/bin/bash
 
-# TODO:
-#		-Add support for song name picking
+# Bash Spotify - A command line Spotify mini-player for macOS
 
-# SONG NAME PICKING PSEUDO-CODE
-#
-# Command: spotify play [options] [type] [name]
-#	Get type and name into variables
-#	Search for type with name -> URI
-#		-> Requires authentication, possibly get OAuth from Spotify App
-#	Play with URI
+# 2017 Henry Franks
+# Visit me on GitHub @henryefranks
 
 stty -echo
 
@@ -100,7 +94,6 @@ while getopts 'anprc' flag; do
 			GREEN=$NONE
 			playerOptions="${playerOptions}c"
 			;;
-
     *)
 			echo "illegal option -- ${flag}"
 			;;
@@ -109,7 +102,7 @@ done
 
 # Checking for non-player cases first will save time
 if [ "$command" == "help" ] || [ "$#" -gt 1 ]; then  # Most important case
-	echo "usage: $0 [options] [-anpr]"
+	echo "usage: $0 [options] [-anprc]"
 	echo "commands: info   - more info"
 	echo "          help   - help (this screen)"
 	echo "          quit   - quit Spotify"
@@ -153,6 +146,7 @@ if [ $command = "player" ]; then
 
 	command="$0 track $playerOptions" # Calling itself because I'm lazy
 	# TODO: run separately to reduce battery consumption
+	# This is also important for scrolling text in the player
 	while :
 	do
 		oldLen=$len
@@ -242,7 +236,11 @@ function now_playing {
 		printf '\e[8;6;'"$(tput cols)"'t'
 		clear
 	fi
-	echo ${track:0:$(tput cols)}
+	current_scroll=0
+	scroll_start=$current_scroll
+	scroll_end=$(($(tput cols) + $current_scroll))
+	echo ${track:$scroll_start:$scroll_end}
+	current_scroll=$(($current_scroll + 1))
 	if [ "$progress" = true ]; then
 		state=$(osascript -e 'tell application "Spotify"' -e 'return player state' -e 'end tell')
 		echo
@@ -264,7 +262,7 @@ function now_playing {
 if [ $command == "track" ]; then
 	now_playing
 	clean_exit
-elif [ $command == "resume" ]; then
+elif [ $command == "resume" ] || [ $command == "play" ]; then
   state=$(osascript -e 'tell application "Spotify"' -e 'return player state' -e 'end tell')
 	echo -en ${REGULAR}
 	if [ "$state" != "playing" ]; then
@@ -283,23 +281,23 @@ elif [ $command == "toggle" ]; then
 	command="playpause"
 elif [ $command == "shuffle" ]; then
 	command="set shuffling to not shuffling"
-  shuffle=$(osascript -e 'tell application "Spotify"' -e 'return shuffling' -e 'end tell')
+  	shuffle=$(osascript -e 'tell application "Spotify"' -e 'return shuffling' -e 'end tell')
 	echo -en ${REGULAR}
 	if [ "$shuffle" == "true" ]; then
 		echo "Turning off shuffle"
-  else
+  	else
 		echo "Turning on shuffle"
-  fi
+  	fi
 	echo -en ${BOLD}
 elif [ $command == "pause" ]; then
 	state=$(osascript -e 'tell application "Spotify"' -e 'return player state' -e 'end tell')
 	echo -en ${REGULAR}
 	if [ "$state" == "playing" ]; then
 		echo "Pausing"
-  else
+  	else
 		echo "Already paused"
 		clean_exit
-  fi
+  	fi
 	echo -en ${BOLD}
 elif [ $command == "play" ]; then
 	search $2
@@ -311,7 +309,7 @@ err=$(osascript -e 'tell application "Spotify"' -e "$command" -e "end tell" 2>&1
 
 # $err will be empty if there was no error
 if [ "$err" != "" ]; then
-	echo -e "${REGULAR}invalid command - use 'help' for a list of commands"
+	echo -e "${REGULAR}Invalid command - use 'help' for a list of commands"
 	clean_exit
 fi
 
